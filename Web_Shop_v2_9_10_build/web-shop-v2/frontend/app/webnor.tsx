@@ -1,0 +1,9 @@
+'use client';
+import {MessageCircle, Send, X} from 'lucide-react';
+import {useState} from 'react';
+
+export default function Webnor(){
+ const [open,setOpen]=useState(false); const [input,setInput]=useState(''); const [messages,setMessages]=useState([{role:'ai',text:'I am Webnor. I help you navigate Web Shop, understand services, and reach the right page.'}]);
+ async function ask(q=input){if(!q.trim())return; const user=q.trim(); setInput(''); setMessages(m=>[...m,{role:'user',text:user}]); try{const r=await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL||'http://localhost:8000'}/api/webnor/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:user})}); const d=await r.json(); setMessages(m=>[...m,{role:'ai',text:d.reply||'I can guide you through Web Shop.'}]);}catch{setMessages(m=>[...m,{role:'ai',text:'Webnor is online, but the site service endpoint is not connected yet. Use the navigation above to continue.'}]);}}
+ return <div className="webnor">{open&&<div className="webnorBox"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><strong>WEBNOR</strong><button onClick={()=>setOpen(false)} style={{background:'none',border:0,color:'#fff',cursor:'pointer'}}><X size={17}/></button></div><div className="quick">{['View DOOM','Services','Process','Contact'].map(q=><button key={q} onClick={()=>ask(q)}>{q}</button>)}</div><div className="webnorMessages">{messages.map((m,i)=><div key={i} className={`msg ${m.role}`}>{m.text}</div>)}</div><form className="webnorForm" onSubmit={e=>{e.preventDefault();ask()}}><input className="input" value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask Webnor…"/><button className="button" type="submit"><Send size={15}/></button></form></div>}<button className="webnorButton" onClick={()=>setOpen(v=>!v)} aria-label="Open Webnor">{open?<X/>:<MessageCircle/>}</button></div>
+}

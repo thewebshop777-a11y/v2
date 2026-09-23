@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image:postgres:17-alpine
+    environment:
+      POSTGRES_DB:webshop
+      POSTGRES_USER:webshop
+      POSTGRES_PASSWORD:webshop
+    ports:["5432:5432"]
+    volumes:[webshop_pg:/var/lib/postgresql/data]
+    healthcheck:{test:["CMD-SHELL","pg_isready -U webshop -d webshop"],interval:5s,timeout:5s,retries:10}
+  redis:
+    image:redis:7-alpine
+    ports:["6379:6379"]
+  backend:
+    build:./backend
+    environment:
+      DATABASE_URL:postgresql+psycopg://webshop:webshop@postgres:5432/webshop
+      REDIS_URL:redis://redis:6379/0
+      JWT_SECRET:${JWT_SECRET:-change-me-in-production}
+      WEBNOR_OPENROUTER_KEY:${WEBNOR_OPENROUTER_KEY:-}
+    ports:["8000:8000"]
+    depends_on:{postgres:{condition:service_healthy}}
+  frontend:
+    image:node:22-alpine
+    working_dir:/app
+    volumes:[./frontend:/app]
+    environment:[NEXT_PUBLIC_API_URL=http://localhost:8000]
+    ports:["3000:3000"]
+    command:sh -c "npm install && npm run dev"
+    depends_on:[backend]
+volumes:{webshop_pg:}
